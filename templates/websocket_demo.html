@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Connect to WebSocket server
+        const socket = io();
+        
+        // Handle connection status
+        socket.on('connect', function() {
+            document.getElementById('status').textContent = 'Connected ✅';
+            document.getElementById('status').className = 'badge bg-success';
+            addMessage('System: Connected to WebSocket server!', 'success');
+        });
+        
+        socket.on('disconnect', function() {
+            document.getElementById('status').textContent = 'Disconnected ❌';
+            document.getElementById('status').className = 'badge bg-danger';
+            addMessage('System: Disconnected from server!', 'danger');
+        });
+        
+        // Handle server messages
+        socket.on('server_response', function(data) {
+            addMessage('Server: ' + data.data, 'info');
+        });
+        
+        // Handle search results
+        socket.on('search_result', function(data) {
+            if (data.found) {
+                const contact = data.contact;
+                const contactInfo = `
+                    <strong>✅ Contact Found via WebSocket!</strong><br>
+                    📱 Mobile: ${contact.mobile}<br>
+                    📧 Email: ${contact.email}<br>
+                    🏠 Address: ${contact.address}<br>
+                    🔢 Registration: ${contact.registration_number}
+                `;
+                addMessage(contactInfo, 'success');
+            } else {
+                addMessage('❌ Contact not found via WebSocket search', 'warning');
+            }
+        });
+        
+        // Send message function
+        document.getElementById('send-btn').addEventListener('click', function() {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+            
+            if (message) {
+                socket.emit('client_message', {message: message});
+                addMessage('You: ' + message, 'secondary', true);
+                messageInput.value = '';
+            }
+        });
+        
+        // WebSocket search function
+        document.getElementById('search-btn').addEventListener('click', function() {
+            const regInput = document.getElementById('search-input');
+            const regNumber = regInput.value.trim();
+            
+            if (regNumber) {
+                socket.emit('search_contact_ws', {registration_number: regNumber});
+                addMessage('You: Searching for registration: ' + regNumber, 'secondary', true);
+                regInput.value = '';
+            }
+        });
+        
+        // Enter key handlers
+        document.getElementById('message-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('send-btn').click();
+            }
+        });
+        
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('search-btn').click();
+            }
+        });
+        
+        // Add message to chat box
+        function addMessage(message, type, alignRight = false) {
+            const messagesDiv = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.className = `alert alert-${type} ${alignRight ? 'text-end' : ''}`;
+            messageElement.innerHTML = message;
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">⚡ WebSocket Demo</h4>
+                <span id="status" class="badge bg-danger">Disconnected ❌</span>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    This demonstrates HTML5 WebSocket real-time communication. 
+                    You can send messages and search contacts in real-time!
+                </p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">💬 Send Message via WebSocket:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="message-input" 
+                                       placeholder="Type a message to send...">
+                                <button class="btn btn-primary" id="send-btn">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">🔍 Search Contact via WebSocket:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search-input" 
+                                       placeholder="Enter registration number...">
+                                <button class="btn btn-success" id="search-btn">Search</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h5>📨 Real-time Messages:</h5>
+                    <div id="messages" style="height: 400px; overflow-y: auto; border: 1px solid #dee2e6; 
+                                              padding: 15px; border-radius: 5px; background-color: #f8f9fa;">
+                        <div class="alert alert-light">
+                            💡 <strong>Welcome to WebSocket Demo!</strong><br>
+                            • Send messages and see real-time responses<br>
+                            • Search contacts using registration numbers<br>
+                            • Watch the connection status above<br>
+                            • All communication happens in real-time via WebSockets
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3 text-center">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">🔍 Search Contact</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="registration_number" class="form-label">Registration Number</label>
+                        <input type="text" class="form-control" id="registration_number" 
+                               name="registration_number" placeholder="Enter registration number to search..." required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Search Contact</button>
+                </form>
+
+                {% if contact %}
+                <div class="mt-4">
+                    <h5>✅ Contact Found!</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            <p><strong>📱 Mobile:</strong> {{ contact.mobile }}</p>
+                            <p><strong>📧 Email:</strong> {{ contact.email }}</p>
+                            <p><strong>🏠 Address:</strong> {{ contact.address }}</p>
+                            <p><strong>🔢 Registration Number:</strong> {{ contact.registration_number }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="mt-3 text-center">
+                    <a href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
